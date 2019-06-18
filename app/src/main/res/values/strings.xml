@@ -1,8 +1,7 @@
 <resources>
-    <string name="app_name">aula11</string>
+    <string name="app_name">Content Listing App</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_edit_film">EditFilm</string>
-    <string name="title_activity_edit_film2">EditFilm2Activity</string>
+    <string name="title_activity_edit_stone">Edit Stone</string>
     <string name="load_from_url">Carregar da URL</string>
     <string name="image_url">URL da imagem</string>
     <string name="save_image">Salvar Imagem no Dispositivo</string>

@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".EditStoneActivity"
-            android:label="@string/title_activity_edit_film"
+            android:label="@string/title_activity_edit_stone"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".MainActivity"
