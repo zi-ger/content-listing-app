@@ -25,7 +25,6 @@ public class DBHelper extends SQLiteOpenHelper {
         public static final String CATEGORIES_COLUMN_ID    = "id";
         public static final String CATEGORIES_COLUMN_NAME    = "name";
 
-
     public DBHelper(Context context){
         super(context, DATABASE_NAME , null, 1);
     }
@@ -33,12 +32,11 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        createDatabaseTables();
+        clearDatabase();
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //TODO
         db.execSQL("DROP TABLE IF EXISTS "+ STONES_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS "+ CATEGORIES_TABLE_NAME);
         onCreate(db);
@@ -51,6 +49,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS "+ CATEGORIES_TABLE_NAME);
 
         createDatabaseTables();
+        db.close();
     }
 
     public void createDatabaseTables() {
@@ -69,8 +68,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 +       STONES_COLUMN_URL + " text, "
                 +       STONES_COLUMN_IMAGE + " blob, "
                 +       "FOREIGN KEY("+ STONES_COLUMN_CATEGORY +") REFERENCES "+CATEGORIES_TABLE_NAME+"("+CATEGORIES_COLUMN_ID+"))");
-
-
+        db.close();
     }
 
     public long insertStone(Stone stone){
@@ -85,15 +83,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return i;
     }
 
-    public long insertCategory(Category category){
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(CATEGORIES_COLUMN_NAME, category.getName());
-        long i = db.insert(CATEGORIES_TABLE_NAME, null, contentValues);
-        db.close();
-        return i;
-    }
-
     public Stone getStone(int id){
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor res =  db.rawQuery( "select * from "+ STONES_TABLE_NAME +" where "
@@ -101,35 +90,13 @@ public class DBHelper extends SQLiteOpenHelper {
         res.moveToFirst();
 
         Stone stone = new Stone(res.getInt(res.getColumnIndex(STONES_COLUMN_ID)),
-                                res.getString(res.getColumnIndex(STONES_COLUMN_NAME)),
-                                res.getString(res.getColumnIndex(STONES_COLUMN_COLOR)),
-                                res.getInt(res.getColumnIndex(STONES_COLUMN_CATEGORY)),
-                                res.getString(res.getColumnIndex(STONES_COLUMN_URL)),
-                                res.getBlob(res.getColumnIndex(STONES_COLUMN_IMAGE)));
+                res.getString(res.getColumnIndex(STONES_COLUMN_NAME)),
+                res.getString(res.getColumnIndex(STONES_COLUMN_COLOR)),
+                res.getInt(res.getColumnIndex(STONES_COLUMN_CATEGORY)),
+                res.getString(res.getColumnIndex(STONES_COLUMN_URL)),
+                res.getBlob(res.getColumnIndex(STONES_COLUMN_IMAGE)));
         db.close();
         return stone;
-    }
-
-    public Category getCategory(int id) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from "+ CATEGORIES_TABLE_NAME +" where "
-                + CATEGORIES_COLUMN_ID +"="+id+"", null );
-        res.moveToFirst();
-        Category category = new Category(res.getInt(res.getColumnIndex(CATEGORIES_COLUMN_ID)),
-                                res.getString(res.getColumnIndex(CATEGORIES_COLUMN_NAME)));
-        db.close();
-        return category;
-    }
-
-    public Category getCategoryFromName(String name) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from "+ CATEGORIES_TABLE_NAME +" where "
-                + CATEGORIES_COLUMN_NAME +"='"+name+"'", null );
-        res.moveToFirst();
-        Category category = new Category(res.getInt(res.getColumnIndex(CATEGORIES_COLUMN_ID)),
-                res.getString(res.getColumnIndex(CATEGORIES_COLUMN_NAME)));
-        db.close();
-        return new Category();
     }
 
     public int numberOfRows(String tableName){
@@ -150,27 +117,10 @@ public class DBHelper extends SQLiteOpenHelper {
         return db.update(STONES_TABLE_NAME, contentValues, STONES_COLUMN_ID +" = ?", new String[] {Integer.toString(stone.getId())} );
     }
 
-    public int updateCategory(Category category){
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(CATEGORIES_COLUMN_NAME, category.getName());
-        db.close();
-        return db.update(CATEGORIES_TABLE_NAME, contentValues, CATEGORIES_COLUMN_ID +" = ?", new String[] {Integer.toString(category.getId())} );
-    }
-
     public Integer deleteStone (int id) {
         SQLiteDatabase db = this.getWritableDatabase();
         int i =  db.delete(STONES_TABLE_NAME,
                 STONES_COLUMN_ID +" = ?",
-                new String[] { Integer.toString(id) });
-        db.close();
-        return i;
-    }
-
-    public Integer deleteCategory (int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        int i =  db.delete(CATEGORIES_TABLE_NAME,
-                CATEGORIES_COLUMN_ID +" = ?",
                 new String[] { Integer.toString(id) });
         db.close();
         return i;
@@ -195,6 +145,45 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         db.close();
         return stones;
+    }
+
+    public long insertCategory(Category category){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(CATEGORIES_COLUMN_NAME, category.getName());
+        long i = db.insert(CATEGORIES_TABLE_NAME, null, contentValues);
+        db.close();
+        return i;
+    }
+
+    public Category getCategory(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res =  db.rawQuery( "select * from "+ CATEGORIES_TABLE_NAME +" where "
+                + CATEGORIES_COLUMN_ID +"="+id+"", null );
+        res.moveToFirst();
+        Category category = new Category(res.getInt(res.getColumnIndex(CATEGORIES_COLUMN_ID)),
+                res.getString(res.getColumnIndex(CATEGORIES_COLUMN_NAME)));
+        db.close();
+        return category;
+    }
+
+    public Category getCategoryFromName(String name) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res =  db.rawQuery( "select * from "+ CATEGORIES_TABLE_NAME +" where "
+                + CATEGORIES_COLUMN_NAME +"='"+name+"'", null );
+        res.moveToFirst();
+        Category category = new Category(res.getInt(res.getColumnIndex(CATEGORIES_COLUMN_ID)),
+                res.getString(res.getColumnIndex(CATEGORIES_COLUMN_NAME)));
+        db.close();
+        return new Category();
+    }
+
+    public int updateCategory(Category category){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(CATEGORIES_COLUMN_NAME, category.getName());
+        db.close();
+        return db.update(CATEGORIES_TABLE_NAME, contentValues, CATEGORIES_COLUMN_ID +" = ?", new String[] {Integer.toString(category.getId())} );
     }
 
     public ArrayList<Category> getAllCategories(){

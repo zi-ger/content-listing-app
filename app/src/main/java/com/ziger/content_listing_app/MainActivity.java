@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
         int id = item.getItemId();
         if (id == R.id.readFromJson) {
             new GetFromJson().execute();
-//            adapter = new StoneAdapter(sdb.getAllStones(), this, this);
+            adapter = new StoneAdapter(sdb.getAllStones(), this, this);
 
         } else if (id == R.id.reloadDB){
             try {
@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
                         Category category = new Category();
                         category.setName(jsonArray.getJSONObject(i).getString("name"));
 
-                        sdb.insertCategory(category);
+//                        sdb.insertCategory(category);
                     }
                     object = new JSONObject(jsonStr);
                     jsonArray = object.getJSONArray("stones");
@@ -235,7 +235,8 @@ public class MainActivity extends AppCompatActivity implements Actions {
                         Stone stone = new Stone();
                         stone.setName(jsonArray.getJSONObject(i).getString("name"));
                         stone.setColor(jsonArray.getJSONObject(i).getString("color"));
-                        stone.setCategory(sdb.getCategoryFromName(jsonArray.getJSONObject(i).getString("category")).getId());
+//                        stone.setCategory(sdb.getCategoryFromName(jsonArray.getJSONObject(i).getString("category")).getId());
+                        stone.setCategory(1);
                         stone.setUrl(jsonArray.getJSONObject(i).getString("url"));
 
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
