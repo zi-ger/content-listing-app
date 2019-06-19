@@ -3,7 +3,6 @@ package com.ziger.content_listing_app;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -32,9 +31,13 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements Actions {
 
     private List<Stone> stoneList;
+    private List<Category> categoryList;
     private StoneAdapter adapter;
     private RecyclerView recyclerView;
     private FloatingActionButton fab;
+
+    private DBHelper sdb;
+
 
     private static final int REQUEST_INSERT = 1;
     private static final int REQUEST_EDIT = 2;
@@ -48,7 +51,10 @@ public class MainActivity extends AppCompatActivity implements Actions {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        new GetStonesJson().execute();
+        sdb = new DBHelper(this);
+
+        setRecyclerView();
+        setFloatActionButton();
     }
 
     @Override
@@ -64,13 +70,39 @@ public class MainActivity extends AppCompatActivity implements Actions {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        if (id == R.id.readFromJson) {
+            new GetFromJson().execute();
+//            adapter = new StoneAdapter(sdb.getAllStones(), this, this);
 
+        } else if (id == R.id.reloadDB){
+            try {
+                stoneList = sdb.getAllStones();
+                adapter = new StoneAdapter(stoneList, this, this);
+                recyclerView.setAdapter(adapter);
+
+            } catch (NullPointerException e) {
+                Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (id == R.id.clearDB) {
+            sdb.clearDatabase();
+            stoneList.clear();
+            adapter.setStoneList(stoneList);
+            recyclerView.setAdapter(adapter);
+        }
         return super.onOptionsItemSelected(item);
     }
 
     private void setRecyclerView() {
 
-        adapter = new StoneAdapter(stoneList, this, this);
+        try {
+            stoneList = sdb.getAllStones();
+            adapter = new StoneAdapter(stoneList, this, this);
+
+        } catch (NullPointerException e) {
+            adapter = new StoneAdapter(stoneList, this, this);
+
+            Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
+        }
 
         recyclerView = (RecyclerView) findViewById(R.id.itemRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -108,15 +140,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
         Bundle bundle = new Bundle();
 
-        Bitmap bmp = st.getImage();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] imageBytes = stream.toByteArray();
-
-        bundle.putByteArray("imageBytes", imageBytes);
-        bundle.putString("name", st.getName());
-        bundle.putString("color", st.getColor());
-        bundle.putString("url", st.getUrl());
+        bundle.putParcelable("eStone", st);
 
         bundle.putInt("REQ_CODE", REQUEST_EDIT);
         bundle.putInt("position", pos);
@@ -152,16 +176,10 @@ public class MainActivity extends AppCompatActivity implements Actions {
         if (requestCode == REQUEST_INSERT){
             if (resultCode == Activity.RESULT_OK){
                 Bundle bundle = data.getExtras();
-                Stone newStone = new Stone();
 
-                newStone.setName(bundle.getString("name"));
-                newStone.setColor(bundle.getString("color"));
-                newStone.setUrl(bundle.getString("url"));
+                Stone newStone = bundle.getParcelable("returnStone");
 
-                byte[] imageBytes = bundle.getByteArray("imageBytes");
-                Bitmap bpm = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                newStone.setImage(bpm);
-
+                sdb.insertStone(newStone);
                 adapter.insert(newStone);
             } else{
                 Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
@@ -170,25 +188,21 @@ public class MainActivity extends AppCompatActivity implements Actions {
             if (resultCode == Activity.RESULT_OK) {
 
                 Bundle bundle = data.getExtras();
-
+                Stone eStone = bundle.getParcelable("returnStone");
                 int pos = bundle.getInt("position");
 
-                adapter.updateName(bundle.getString("name"), pos);
-                adapter.updateColor(bundle.getString("color"), pos);
-                adapter.updateUrl(bundle.getString("url"), pos);
+                adapter.updateName(eStone.getName(), pos);
+                adapter.updateColor(eStone.getColor(), pos);
+                adapter.updateUrl(eStone.getUrl(), pos);
+                adapter.updateImage(eStone.getImage(), pos);
 
-                byte[] imageBytes = bundle.getByteArray("imageBytes");
-                Bitmap newStoneImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-
-                adapter.updateImage(newStoneImage, pos);
-
-            } else {
+          } else {
                 Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    private class GetStonesJson extends AsyncTask<Void, Void, Void> {
+    private class GetFromJson extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -199,21 +213,38 @@ public class MainActivity extends AppCompatActivity implements Actions {
         @Override
         protected Void doInBackground(Void... voids) {
             stoneList = new ArrayList<Stone>();
+            categoryList = new ArrayList<Category>();
+
 
             HttpHandler sh = new HttpHandler();
             String jsonStr = sh.makeServiceCall("https://my-json-server.typicode.com/zi-ger/jsonServer/db");
             if (jsonStr != null) {
                 try {
                     JSONObject object = new JSONObject(jsonStr);
-                    JSONArray jsonArray = object.getJSONArray("stones");
+                    JSONArray jsonArray = object.getJSONArray("categories");
                     for (int i = 0; i < jsonArray.length(); i++) {
-                        Stone st = new Stone();
-                        st.setName(jsonArray.getJSONObject(i).getString("name"));
-                        st.setColor(jsonArray.getJSONObject(i).getString("color"));
-                        st.setUrl(jsonArray.getJSONObject(i).getString("url"));
-                        st.setImage(new HttpHandler().getBitmap(st.getUrl()));
 
-                        stoneList.add(st);
+                        Category category = new Category();
+                        category.setName(jsonArray.getJSONObject(i).getString("name"));
+
+                        sdb.insertCategory(category);
+                    }
+                    object = new JSONObject(jsonStr);
+                    jsonArray = object.getJSONArray("stones");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        Stone stone = new Stone();
+                        stone.setName(jsonArray.getJSONObject(i).getString("name"));
+                        stone.setColor(jsonArray.getJSONObject(i).getString("color"));
+                        stone.setCategory(sdb.getCategoryFromName(jsonArray.getJSONObject(i).getString("category")).getId());
+                        stone.setUrl(jsonArray.getJSONObject(i).getString("url"));
+
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        new HttpHandler().getBitmap(stone.getUrl()).compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        byte[] imageBytes = stream.toByteArray();
+
+                        stone.setImage(imageBytes);
+
+                        sdb.insertStone(stone);
                     }
                 }  catch (final JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
@@ -243,8 +274,8 @@ public class MainActivity extends AppCompatActivity implements Actions {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            setRecyclerView();
-            setFloatActionButton();
+//            setRecyclerView();
+//            setFloatActionButton();
         }
     }
 

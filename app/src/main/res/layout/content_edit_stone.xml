@@ -28,6 +28,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/nameEditText" />
 
+    <Spinner
+        android:id="@+id/categorySpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/colorEditText" />
+
 
     <ImageView
         android:id="@+id/stoneImageView"
@@ -37,7 +44,7 @@
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/colorEditText"
+        app:layout_constraintTop_toBottomOf="@+id/categorySpinner"
         app:srcCompat="@drawable/image" />
 
     <ImageButton
@@ -99,5 +106,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/galleryImageButton"
         app:layout_constraintTop_toTopOf="@+id/cameraImageButton" />
+
+
 
 </android.support.constraint.ConstraintLayout>

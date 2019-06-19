@@ -1,10 +1,23 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.ziger.aula11.MainActivity">
+    tools:context="com.ziger.content-listing-app.MainActivity">
+
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/readFromJson"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="Read JSON"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/reloadDB"
+        android:orderInCategory="100"
+        android:title="Reload Database"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/clearDB"
+        android:orderInCategory="100"
+        android:title="Clear Database"
         app:showAsAction="never" />
 </menu>

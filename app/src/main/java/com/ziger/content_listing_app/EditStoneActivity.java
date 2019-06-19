@@ -72,12 +72,18 @@ public class EditStoneActivity extends AppCompatActivity {
 
         if (REQ_CODE == REQUEST_EDIT) {
 
-            nameEditText.setText(bundle.getString("name"));
-            colorEditText.setText(bundle.getString("color"));
-            urlTextView.setText(bundle.getString("url"));
+//            nameEditText.setText(bundle.getString("name"));
+//            colorEditText.setText(bundle.getString("color"));
+//            urlTextView.setText(bundle.getString("url"));
 
-            byte[] imageBytes = bundle.getByteArray("imageBytes");
-            stoneImageView.setImageBitmap(BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length));
+            Stone eStone = bundle.getParcelable("eStone");
+
+            nameEditText.setText(eStone.getName());
+            colorEditText.setText(eStone.getColor());
+            urlTextView.setText(eStone.getUrl());
+
+//            byte[] imageBytes = bundle.getByteArray("imageBytes");
+            stoneImageView.setImageBitmap(BitmapFactory.decodeByteArray(eStone.getImage(), 0, eStone.getImage().length));
         }
 
 
@@ -119,16 +125,19 @@ public class EditStoneActivity extends AppCompatActivity {
         int REQ_CODE = bundle.getInt("REQ_CODE");
 
         Bundle returnBundle = new Bundle();
-
-        returnBundle.putString("name", nameEditText.getText().toString());
-        returnBundle.putString("color", colorEditText.getText().toString());
-        returnBundle.putString("url", urlTextView.getText().toString());
+        Stone returnStone = new Stone();
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         ((BitmapDrawable)stoneImageView.getDrawable()).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, stream); // para evitar NullPointerException
         byte[] bpmBytes = stream.toByteArray();
 
-        returnBundle.putByteArray("imageBytes", bpmBytes);
+        returnStone.setName(nameEditText.getText().toString());
+        returnStone.setColor(colorEditText.getText().toString());
+        returnStone.setUrl(urlTextView.getText().toString());
+
+        returnStone.setImage(bpmBytes);
+
+        returnBundle.putParcelable("returnStone", returnStone);
 
         if (REQ_CODE == REQUEST_EDIT) {
             returnBundle.putInt("position", stonePos);
