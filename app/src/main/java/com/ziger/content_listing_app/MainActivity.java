@@ -75,14 +75,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
             adapter = new StoneAdapter(sdb.getAllStones(), this, this);
 
         } else if (id == R.id.reloadDB){
-            try {
-                stoneList = sdb.getAllStones();
-                adapter = new StoneAdapter(stoneList, this, this);
-                recyclerView.setAdapter(adapter);
-
-            } catch (NullPointerException e) {
-                Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
-            }
+            reloadDB();
         } else if (id == R.id.clearDB) {
             sdb.clearDatabase();
             stoneList.clear();
@@ -90,6 +83,17 @@ public class MainActivity extends AppCompatActivity implements Actions {
             recyclerView.setAdapter(adapter);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void reloadDB() {
+        try {
+            stoneList = sdb.getAllStones();
+            adapter = new StoneAdapter(stoneList, this, this);
+            recyclerView.setAdapter(adapter);
+
+        } catch (NullPointerException e) {
+            Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setRecyclerView() {
@@ -128,6 +132,9 @@ public class MainActivity extends AppCompatActivity implements Actions {
         Bundle bundle = new Bundle();
         bundle.putInt("REQ_CODE", REQUEST_INSERT);
 
+        ArrayList<Category> catArray = sdb.getAllCategories();
+        bundle.putParcelableArrayList("catArray", catArray);
+
         Intent intent = new Intent(this, EditStoneActivity.class);
         intent.putExtras(bundle);
 
@@ -139,6 +146,9 @@ public class MainActivity extends AppCompatActivity implements Actions {
         Stone st = adapter.getStoneList().get(pos);
 
         Bundle bundle = new Bundle();
+
+        ArrayList<Category> catArray = sdb.getAllCategories();
+        bundle.putParcelableArrayList("catArray", catArray);
 
         bundle.putParcelable("eStone", st);
 
@@ -176,7 +186,6 @@ public class MainActivity extends AppCompatActivity implements Actions {
         if (requestCode == REQUEST_INSERT){
             if (resultCode == Activity.RESULT_OK){
                 Bundle bundle = data.getExtras();
-
                 Stone newStone = bundle.getParcelable("returnStone");
 
                 sdb.insertStone(newStone);
@@ -186,9 +195,9 @@ public class MainActivity extends AppCompatActivity implements Actions {
             }
         } else if (requestCode == REQUEST_EDIT) {
             if (resultCode == Activity.RESULT_OK) {
-
                 Bundle bundle = data.getExtras();
                 Stone eStone = bundle.getParcelable("returnStone");
+
                 int pos = bundle.getInt("position");
 
                 adapter.updateName(eStone.getName(), pos);
@@ -196,6 +205,8 @@ public class MainActivity extends AppCompatActivity implements Actions {
                 adapter.updateUrl(eStone.getUrl(), pos);
                 adapter.updateImage(eStone.getImage(), pos);
 
+                sdb.updateStone(eStone);
+                reloadDB();
           } else {
                 Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
             }
@@ -227,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
                         Category category = new Category();
                         category.setName(jsonArray.getJSONObject(i).getString("name"));
 
-//                        sdb.insertCategory(category);
+                        sdb.insertCategory(category);
                     }
                     object = new JSONObject(jsonStr);
                     jsonArray = object.getJSONArray("stones");
@@ -235,8 +246,9 @@ public class MainActivity extends AppCompatActivity implements Actions {
                         Stone stone = new Stone();
                         stone.setName(jsonArray.getJSONObject(i).getString("name"));
                         stone.setColor(jsonArray.getJSONObject(i).getString("color"));
-//                        stone.setCategory(sdb.getCategoryFromName(jsonArray.getJSONObject(i).getString("category")).getId());
-                        stone.setCategory(1);
+
+                        stone.setCategory((int)sdb.getCategoryFromName(jsonArray.getJSONObject(i).getString("category")).getId());
+
                         stone.setUrl(jsonArray.getJSONObject(i).getString("url"));
 
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -275,8 +287,6 @@ public class MainActivity extends AppCompatActivity implements Actions {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-//            setRecyclerView();
-//            setFloatActionButton();
         }
     }
 

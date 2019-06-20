@@ -19,19 +19,18 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public class EditStoneActivity extends AppCompatActivity {
 
@@ -40,8 +39,14 @@ public class EditStoneActivity extends AppCompatActivity {
     private Bitmap bitmap;
     private int cont;
 
+    Stone eStone;
+
     TextView nameEditText;
     TextView colorEditText;
+    Spinner categorySpinner;
+
+    ArrayAdapter adapter;
+    ArrayList<Category> catArray;
 
     private static final int REQUEST_GALLERY = 0;
     private static final int REQUEST_CAMERA = 1;
@@ -63,26 +68,29 @@ public class EditStoneActivity extends AppCompatActivity {
 
         nameEditText = findViewById(R.id.nameEditText);
         colorEditText = findViewById(R.id.colorEditText);
+        categorySpinner = findViewById(R.id.categorySpinner);
 
         stoneImageView = (ImageView) findViewById(R.id.stoneImageView);
         stoneImageView.setImageResource(R.drawable.image);
 
         urlTextView = (EditText) findViewById(R.id.urlEditText);
 
+        catArray = bundle.getParcelableArrayList("catArray");
+
+        adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, catArray);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categorySpinner.setAdapter(adapter);
 
         if (REQ_CODE == REQUEST_EDIT) {
 
-//            nameEditText.setText(bundle.getString("name"));
-//            colorEditText.setText(bundle.getString("color"));
-//            urlTextView.setText(bundle.getString("url"));
-
-            Stone eStone = bundle.getParcelable("eStone");
+            eStone = bundle.getParcelable("eStone");
 
             nameEditText.setText(eStone.getName());
             colorEditText.setText(eStone.getColor());
             urlTextView.setText(eStone.getUrl());
 
-//            byte[] imageBytes = bundle.getByteArray("imageBytes");
+
+            categorySpinner.setSelection(eStone.getCategory() - 1);
             stoneImageView.setImageBitmap(BitmapFactory.decodeByteArray(eStone.getImage(), 0, eStone.getImage().length));
         }
 
@@ -133,15 +141,17 @@ public class EditStoneActivity extends AppCompatActivity {
 
         returnStone.setName(nameEditText.getText().toString());
         returnStone.setColor(colorEditText.getText().toString());
+        returnStone.setCategory(categorySpinner.getSelectedItemPosition() + 1);
         returnStone.setUrl(urlTextView.getText().toString());
 
         returnStone.setImage(bpmBytes);
 
-        returnBundle.putParcelable("returnStone", returnStone);
 
         if (REQ_CODE == REQUEST_EDIT) {
             returnBundle.putInt("position", stonePos);
+            returnStone.setId(eStone.getId());
         }
+        returnBundle.putParcelable("returnStone", returnStone);
 
         Intent returnIntent = new Intent();
         returnIntent.putExtras(returnBundle);

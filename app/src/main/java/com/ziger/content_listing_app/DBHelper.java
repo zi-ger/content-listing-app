@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -69,7 +68,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 +       STONES_COLUMN_URL + " text, "
                 +       STONES_COLUMN_IMAGE + " blob, "
                 +       "FOREIGN KEY("+ STONES_COLUMN_CATEGORY +") REFERENCES "+CATEGORIES_TABLE_NAME+"("+CATEGORIES_COLUMN_ID+"))");
-//        db.close();
     }
 
     public long insertStone(Stone stone){
@@ -77,6 +75,7 @@ public class DBHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put(STONES_COLUMN_NAME, stone.getName());
         contentValues.put(STONES_COLUMN_COLOR, stone.getColor());
+        contentValues.put(STONES_COLUMN_CATEGORY, stone.getCategory());
         contentValues.put(STONES_COLUMN_URL, stone.getUrl());
         contentValues.put(STONES_COLUMN_IMAGE, stone.getImage());
         long i = db.insert(STONES_TABLE_NAME, null, contentValues);
@@ -107,15 +106,16 @@ public class DBHelper extends SQLiteOpenHelper {
         return numRows;
     }
 
-    public int updateStone(Stone stone){
+    public void updateStone(Stone stone) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(STONES_COLUMN_NAME, stone.getName());
-        contentValues.put(STONES_COLUMN_COLOR, stone.getColor());
-        contentValues.put(STONES_COLUMN_URL, stone.getUrl());
-        contentValues.put(STONES_COLUMN_IMAGE, stone.getImage());
-        db.close();
-        return db.update(STONES_TABLE_NAME, contentValues, STONES_COLUMN_ID +" = ?", new String[] {Integer.toString(stone.getId())} );
+
+        db.execSQL(  "update '"  + STONES_TABLE_NAME + "' set "
+                                + STONES_COLUMN_NAME    + "='"+ stone.getName() +"',"
+                                + STONES_COLUMN_COLOR   + "='"+ stone.getColor() +"',"
+                                + STONES_COLUMN_CATEGORY   + "='"+ stone.getCategory() +"',"
+                                + STONES_COLUMN_URL   + "='"+ stone.getUrl() +"',"
+                                + STONES_COLUMN_IMAGE   + "='"+ stone.getImage() +"'"
+                                + " where " + STONES_COLUMN_ID + "=" + stone.getId()+";");
     }
 
     public Integer deleteStone (int id) {
@@ -133,9 +133,6 @@ public class DBHelper extends SQLiteOpenHelper {
         Cursor res =  db.rawQuery( "select * from "+STONES_TABLE_NAME, null );
         res.moveToFirst();
         while(res.isAfterLast() == false){
-
-            Log.d("testing stuff", "getAllStones: " + res.getInt(res.getColumnIndex(STONES_COLUMN_ID)));
-
             stones.add(new Stone(res.getInt(res.getColumnIndex(STONES_COLUMN_ID)),
                     res.getString(res.getColumnIndex(STONES_COLUMN_NAME)),
                     res.getString(res.getColumnIndex(STONES_COLUMN_COLOR)),
@@ -176,7 +173,7 @@ public class DBHelper extends SQLiteOpenHelper {
         Category category = new Category(res.getInt(res.getColumnIndex(CATEGORIES_COLUMN_ID)),
                 res.getString(res.getColumnIndex(CATEGORIES_COLUMN_NAME)));
         db.close();
-        return new Category();
+        return category;
     }
 
     public int updateCategory(Category category){
@@ -190,7 +187,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public ArrayList<Category> getAllCategories(){
         ArrayList<Category> categories = new ArrayList<Category>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from "+ STONES_TABLE_NAME, null );
+        Cursor res =  db.rawQuery( "select * from "+ CATEGORIES_TABLE_NAME, null );
         res.moveToFirst();
         while(res.isAfterLast() == false){
             categories.add(new Category(res.getInt(res.getColumnIndex(CATEGORIES_COLUMN_ID)),

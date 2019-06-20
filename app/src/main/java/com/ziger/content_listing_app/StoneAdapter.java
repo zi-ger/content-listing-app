@@ -3,7 +3,6 @@ package com.ziger.content_listing_app;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -59,7 +58,7 @@ public class StoneAdapter extends RecyclerView.Adapter {
         StoneViewHolder holder = (StoneViewHolder) viewHolder;
         holder.nameTextView.setText(stoneList.get(i).getName());
         holder.colorTextView.setText(stoneList.get(i).getColor());
-        holder.idTextView.setText(Integer.toString(stoneList.get(i).getId()));
+        holder.idTextView.setText(Integer.toString(stoneList.get(i).getCategory()));
 
         holder.imageView.setImageBitmap(BitmapFactory.decodeByteArray(stoneList.get(i).getImage(), 0, stoneList.get(i).getImage().length));
 
