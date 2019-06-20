@@ -22,8 +22,8 @@ public class DBHelper extends SQLiteOpenHelper {
         public static final String STONES_COLUMN_IMAGE      = "image";
 
     public static final String CATEGORIES_TABLE_NAME    = "categories";
-        public static final String CATEGORIES_COLUMN_ID    = "id";
-        public static final String CATEGORIES_COLUMN_NAME    = "name";
+        public static final String CATEGORIES_COLUMN_ID     = "id";
+        public static final String CATEGORIES_COLUMN_NAME   = "name";
 
     public DBHelper(Context context){
         super(context, DATABASE_NAME , null, 1);
@@ -32,7 +32,10 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        clearDatabase();
+        db.execSQL("DROP TABLE IF EXISTS "+ STONES_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS "+ CATEGORIES_TABLE_NAME);
+
+        createDatabaseTables(db);
     }
 
     @Override
@@ -48,13 +51,11 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS "+ STONES_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS "+ CATEGORIES_TABLE_NAME);
 
-        createDatabaseTables();
+        createDatabaseTables(db);
         db.close();
     }
 
-    public void createDatabaseTables() {
-
-        SQLiteDatabase db = this.getWritableDatabase();
+    public void createDatabaseTables(SQLiteDatabase db) {
 
         db.execSQL("create table " + CATEGORIES_TABLE_NAME
                 + "("+  CATEGORIES_COLUMN_ID + " integer primary key, "
@@ -68,7 +69,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 +       STONES_COLUMN_URL + " text, "
                 +       STONES_COLUMN_IMAGE + " blob, "
                 +       "FOREIGN KEY("+ STONES_COLUMN_CATEGORY +") REFERENCES "+CATEGORIES_TABLE_NAME+"("+CATEGORIES_COLUMN_ID+"))");
-        db.close();
+//        db.close();
     }
 
     public long insertStone(Stone stone){
