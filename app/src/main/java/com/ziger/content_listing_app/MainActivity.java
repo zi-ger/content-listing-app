@@ -32,12 +32,16 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
     private List<Stone> stoneList;
     private List<Category> categoryList;
-    private StoneAdapter adapter;
+    private StoneAdapter stoneAdapter;
+    private CategoryAdapter categoryAdapter;
     private RecyclerView recyclerView;
     private FloatingActionButton fab;
+    private FloatingActionButton fabCategory;
+    private FloatingActionButton fabStone;
 
     private DBHelper sdb;
 
+    private int CATEGORY_OR_STONE;
 
     private static final int REQUEST_INSERT = 1;
     private static final int REQUEST_EDIT = 2;
@@ -53,8 +57,16 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
         sdb = new DBHelper(this);
 
-        setRecyclerView();
-        setFloatActionButton();
+        fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MainActivity.this, "Escolha entre categorias ou pedras primeiro!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        setFabCategory();
+        setFabStone();
     }
 
     @Override
@@ -72,38 +84,60 @@ public class MainActivity extends AppCompatActivity implements Actions {
         int id = item.getItemId();
         if (id == R.id.readFromJson) {
             new GetFromJson().execute();
-            adapter = new StoneAdapter(sdb.getAllStones(), this, this);
+            if (CATEGORY_OR_STONE == 1) {
+                categoryAdapter = new CategoryAdapter(sdb.getAllCategories(), this, this);
+            } else if (CATEGORY_OR_STONE == 2) {
+                stoneAdapter = new StoneAdapter(sdb.getAllStones(), this, this);
+            }
 
         } else if (id == R.id.reloadDB){
             reloadDB();
         } else if (id == R.id.clearDB) {
             sdb.clearDatabase();
+
             stoneList.clear();
-            adapter.setStoneList(stoneList);
-            recyclerView.setAdapter(adapter);
+            categoryList.clear();
+
+            if (CATEGORY_OR_STONE == 1) {
+                categoryAdapter.setCategoryList(categoryList);
+                recyclerView.setAdapter(categoryAdapter);
+            } else if (CATEGORY_OR_STONE == 2) {
+                stoneAdapter.setStoneList(stoneList);
+                recyclerView.setAdapter(stoneAdapter);
+            }
+
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void reloadDB() {
         try {
-            stoneList = sdb.getAllStones();
-            adapter = new StoneAdapter(stoneList, this, this);
-            recyclerView.setAdapter(adapter);
+            if (CATEGORY_OR_STONE == 1) {
+                categoryList = sdb.getAllCategories();
+                categoryAdapter = new CategoryAdapter(sdb.getAllCategories(), this, this);
+                recyclerView.setAdapter(categoryAdapter);
+            } else if (CATEGORY_OR_STONE == 2) {
+                stoneList = sdb.getAllStones();
+                stoneAdapter = new StoneAdapter(stoneList, this, this);
+                recyclerView.setAdapter(stoneAdapter);
+            }
+
 
         } catch (NullPointerException e) {
             Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void setRecyclerView() {
+    private void setRecyclerViewCategory() {
+
+        CATEGORY_OR_STONE = 1;
 
         try {
-            stoneList = sdb.getAllStones();
-            adapter = new StoneAdapter(stoneList, this, this);
+            categoryList = sdb.getAllCategories();
+            categoryAdapter = new CategoryAdapter(categoryList, this, this);
 
         } catch (NullPointerException e) {
-            adapter = new StoneAdapter(stoneList, this, this);
+            categoryAdapter = new CategoryAdapter(categoryList, this, this);
 
             Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
         }
@@ -111,19 +145,52 @@ public class MainActivity extends AppCompatActivity implements Actions {
         recyclerView = (RecyclerView) findViewById(R.id.itemRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(categoryAdapter);
+   }
 
-        ItemTouchHelper touchHelper = new ItemTouchHelper(new TouchHelp(adapter));
-        touchHelper.attachToRecyclerView(recyclerView);
+    private void setRecyclerViewStone() {
 
+        CATEGORY_OR_STONE = 2;
+
+        try {
+            stoneList = sdb.getAllStones();
+            stoneAdapter = new StoneAdapter(stoneList, this, this);
+
+        } catch (NullPointerException e) {
+            stoneAdapter = new StoneAdapter(stoneList, this, this);
+
+            Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
+        }
+
+        recyclerView = (RecyclerView) findViewById(R.id.itemRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(stoneAdapter);
     }
 
-    private void setFloatActionButton() {
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+    private void setFabCategory() {
+        fabCategory = findViewById(R.id.fabCategory);
+        fabCategory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                insertStone();
+
+                setRecyclerViewCategory();
+            }
+        });
+    }
+
+    private void setFabStone() {
+        fabStone = findViewById(R.id.fabStone);
+        fabStone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setRecyclerViewStone();
+                fab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        insertStone();
+                    }
+                });
             }
         });
     }
@@ -143,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
     @Override
     public void editStone(int pos) {
-        Stone st = adapter.getStoneList().get(pos);
+        Stone st = stoneAdapter.getStoneList().get(pos);
 
         Bundle bundle = new Bundle();
 
@@ -162,13 +229,18 @@ public class MainActivity extends AppCompatActivity implements Actions {
     }
 
     @Override
+    public void editCategory(int pos) {
+        Category cat;
+    }
+
+    @Override
     public void undo() {
         Snackbar snackbar = Snackbar.make(findViewById(R.id.constraintLayout),"Item removido.",Snackbar.LENGTH_LONG);
 
         snackbar.setAction("Desfazer", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                adapter.restore();
+                stoneAdapter.restore();
             }
         });
         snackbar.show();
@@ -189,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
                 Stone newStone = bundle.getParcelable("returnStone");
 
                 sdb.insertStone(newStone);
-                adapter.insert(newStone);
+                stoneAdapter.insert(newStone);
             } else{
                 Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
             }
@@ -200,11 +272,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
                 int pos = bundle.getInt("position");
 
-                adapter.updateName(eStone.getName(), pos);
-                adapter.updateColor(eStone.getColor(), pos);
-                adapter.updateUrl(eStone.getUrl(), pos);
-                adapter.updateImage(eStone.getImage(), pos);
-
+                stoneAdapter.update(eStone, pos);
                 sdb.updateStone(eStone);
                 reloadDB();
           } else {

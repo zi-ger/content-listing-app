@@ -7,4 +7,6 @@ public interface Actions {
     public void toast(Stone stone);
 
     public void editStone(int pos);
+
+    public void editCategory(int pos);
 }

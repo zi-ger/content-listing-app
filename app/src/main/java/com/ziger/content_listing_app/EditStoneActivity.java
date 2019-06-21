@@ -39,14 +39,14 @@ public class EditStoneActivity extends AppCompatActivity {
     private Bitmap bitmap;
     private int cont;
 
-    Stone eStone;
+    private Stone eStone;
 
-    TextView nameEditText;
-    TextView colorEditText;
-    Spinner categorySpinner;
+    private TextView nameEditText;
+    private TextView colorEditText;
+    private Spinner categorySpinner;
 
-    ArrayAdapter adapter;
-    ArrayList<Category> catArray;
+    private ArrayAdapter adapter;
+    private ArrayList<Category> catArray;
 
     private static final int REQUEST_GALLERY = 0;
     private static final int REQUEST_CAMERA = 1;

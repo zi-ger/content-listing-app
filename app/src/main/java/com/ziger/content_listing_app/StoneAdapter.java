@@ -47,7 +47,7 @@ public class StoneAdapter extends RecyclerView.Adapter {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_row, viewGroup, false);
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_row_stone, viewGroup, false);
 
         StoneViewHolder holder = new StoneViewHolder(view);
         return holder;
@@ -58,8 +58,7 @@ public class StoneAdapter extends RecyclerView.Adapter {
         StoneViewHolder holder = (StoneViewHolder) viewHolder;
         holder.nameTextView.setText(stoneList.get(i).getName());
         holder.colorTextView.setText(stoneList.get(i).getColor());
-        holder.idTextView.setText(Integer.toString(stoneList.get(i).getCategory()));
-
+        holder.idTextView.setText(Integer.toString(stoneList.get(i).getId()));
         holder.imageView.setImageBitmap(BitmapFactory.decodeByteArray(stoneList.get(i).getImage(), 0, stoneList.get(i).getImage().length));
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -69,7 +68,13 @@ public class StoneAdapter extends RecyclerView.Adapter {
                 actions.toast(stoneList.get(viewHolder.getAdapterPosition()));
             }
         });
+    }
 
+    public void update(Stone st, int position) {
+        updateName(st.getName(), position);
+        updateColor(st.getColor(), position);
+        updateUrl(st.getUrl(), position);
+        updateImage(st.getImage(), position);
     }
 
     public void remove(int position){
@@ -115,10 +120,12 @@ public class StoneAdapter extends RecyclerView.Adapter {
 
     public void updateImage (byte[] newImage, int position){
         stoneList.get(position).setImage(newImage);
+        notifyItemChanged(position);
     }
 
     public void updateUrl (String newUrl, int position) {
         stoneList.get(position).setUrl(newUrl);
+        notifyItemChanged(position);
     }
 
     @Override

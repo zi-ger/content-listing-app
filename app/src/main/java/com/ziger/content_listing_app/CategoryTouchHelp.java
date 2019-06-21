@@ -4,11 +4,11 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
-public class TouchHelp extends ItemTouchHelper.SimpleCallback {
+public class CategoryTouchHelp extends ItemTouchHelper.SimpleCallback {
 
-    private StoneAdapter adapter;
+    private CategoryAdapter adapter;
 
-    public TouchHelp(StoneAdapter adapter) {
+    public CategoryTouchHelp(CategoryAdapter adapter) {
         super(ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.LEFT);
         this.adapter = adapter;
     }
