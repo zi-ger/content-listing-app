@@ -81,7 +81,17 @@ public class EditStoneActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
 
+        FloatingActionButton fabSave = findViewById(R.id.fabStoneSave);
+        FloatingActionButton fabRemove = findViewById(R.id.fabStoneRemove);
+
         if (REQ_CODE == REQUEST_EDIT) {
+
+            fabRemove.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    removeStone();
+                }
+            });
 
             eStone = bundle.getParcelable("eStone");
 
@@ -92,16 +102,24 @@ public class EditStoneActivity extends AppCompatActivity {
 
             categorySpinner.setSelection(eStone.getCategory() - 1);
             stoneImageView.setImageBitmap(BitmapFactory.decodeByteArray(eStone.getImage(), 0, eStone.getImage().length));
+        } else {
+            fabRemove.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Toast.makeText(EditStoneActivity.this, "Operação impossível.", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        fabSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 returnStone();
             }
         });
+
+
     }
 
     @Override
@@ -152,6 +170,25 @@ public class EditStoneActivity extends AppCompatActivity {
             returnStone.setId(eStone.getId());
         }
         returnBundle.putParcelable("returnStone", returnStone);
+        returnBundle.putInt("REQ_CODE", -1);
+
+        Intent returnIntent = new Intent();
+        returnIntent.putExtras(returnBundle);
+        setResult(Activity.RESULT_OK, returnIntent);
+
+        finish();
+    }
+
+    public void removeStone() {
+
+        Bundle bundle = getIntent().getExtras();
+        int stonePos = bundle.getInt("position");
+
+        Bundle returnBundle = new Bundle();
+
+        returnBundle.putInt("position", stonePos);
+        returnBundle.putInt("id", eStone.getId());
+        returnBundle.putInt("REQ_CODE", 0);
 
         Intent returnIntent = new Intent();
         returnIntent.putExtras(returnBundle);

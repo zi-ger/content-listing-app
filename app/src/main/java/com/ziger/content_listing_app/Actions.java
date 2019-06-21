@@ -2,11 +2,11 @@ package com.ziger.content_listing_app;
 
 public interface Actions {
 
-    public void undo();
+    void undo();
 
-    public void toast(Stone stone);
+    void toast(String str);
 
-    public void editStone(int pos);
+    void editStone(int pos);
 
-    public void editCategory(int pos);
+    void editCategory(int pos);
 }

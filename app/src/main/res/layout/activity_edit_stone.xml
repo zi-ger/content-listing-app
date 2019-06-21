@@ -23,7 +23,16 @@
     <include layout="@layout/content_edit_stone" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fabStoneRemove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="@android:color/darker_gray"
+        app:srcCompat="@drawable/baseline_delete_black_24dp" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabStoneSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"

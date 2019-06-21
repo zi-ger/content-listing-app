@@ -39,12 +39,18 @@ public class MainActivity extends AppCompatActivity implements Actions {
     private FloatingActionButton fabCategory;
     private FloatingActionButton fabStone;
 
+    ItemTouchHelper categoryTouchHelper;
+    ItemTouchHelper stoneTouchHelper;
+
     private DBHelper sdb;
 
     private int CATEGORY_OR_STONE;
 
-    private static final int REQUEST_INSERT = 1;
-    private static final int REQUEST_EDIT = 2;
+    private static final int REQUEST_INSERT_STONE = 1;
+    private static final int REQUEST_EDIT_STONE = 2;
+    private static final int REQUEST_INSERT_CATEGORY = 3;
+    private static final int REQUEST_EDIT_CATEGORY = 4;
+
 
     private String TAG = MainActivity.class.getSimpleName();
 
@@ -95,13 +101,13 @@ public class MainActivity extends AppCompatActivity implements Actions {
         } else if (id == R.id.clearDB) {
             sdb.clearDatabase();
 
-            stoneList.clear();
-            categoryList.clear();
-
             if (CATEGORY_OR_STONE == 1) {
+                categoryList.clear();
                 categoryAdapter.setCategoryList(categoryList);
                 recyclerView.setAdapter(categoryAdapter);
+
             } else if (CATEGORY_OR_STONE == 2) {
+                stoneList.clear();
                 stoneAdapter.setStoneList(stoneList);
                 recyclerView.setAdapter(stoneAdapter);
             }
@@ -121,8 +127,6 @@ public class MainActivity extends AppCompatActivity implements Actions {
                 stoneAdapter = new StoneAdapter(stoneList, this, this);
                 recyclerView.setAdapter(stoneAdapter);
             }
-
-
         } catch (NullPointerException e) {
             Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
         }
@@ -142,11 +146,17 @@ public class MainActivity extends AppCompatActivity implements Actions {
             Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
         }
 
+        recyclerView = null;
         recyclerView = (RecyclerView) findViewById(R.id.itemRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(categoryAdapter);
-   }
+
+        categoryTouchHelper = new ItemTouchHelper(new CategoryTouchHelp(categoryAdapter));
+        categoryTouchHelper.attachToRecyclerView(recyclerView);
+
+        Toast.makeText(this, "Categorias carregadas", Toast.LENGTH_SHORT).show();
+    }
 
     private void setRecyclerViewStone() {
 
@@ -162,10 +172,16 @@ public class MainActivity extends AppCompatActivity implements Actions {
             Toast.makeText(this, "Nenhum registro no banco de dados.", Toast.LENGTH_SHORT).show();
         }
 
+        recyclerView = null;
         recyclerView = (RecyclerView) findViewById(R.id.itemRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(stoneAdapter);
+
+        stoneTouchHelper = new ItemTouchHelper(new StoneTouchHelp(stoneAdapter));
+        stoneTouchHelper.attachToRecyclerView(recyclerView);
+
+        Toast.makeText(this, "Pedras carregadas", Toast.LENGTH_SHORT).show();
     }
 
     private void setFabCategory() {
@@ -173,8 +189,13 @@ public class MainActivity extends AppCompatActivity implements Actions {
         fabCategory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 setRecyclerViewCategory();
+                fab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        insertCategory();
+                    }
+                });
             }
         });
     }
@@ -197,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
     public void insertStone(){
         Bundle bundle = new Bundle();
-        bundle.putInt("REQ_CODE", REQUEST_INSERT);
+        bundle.putInt("REQ_CODE", REQUEST_INSERT_STONE);
 
         ArrayList<Category> catArray = sdb.getAllCategories();
         bundle.putParcelableArrayList("catArray", catArray);
@@ -205,7 +226,17 @@ public class MainActivity extends AppCompatActivity implements Actions {
         Intent intent = new Intent(this, EditStoneActivity.class);
         intent.putExtras(bundle);
 
-        startActivityForResult(intent, REQUEST_INSERT);
+        startActivityForResult(intent, REQUEST_INSERT_STONE);
+    }
+
+    public void insertCategory() {
+        Bundle bundle = new Bundle();
+        bundle.putInt("REQ_CODE", REQUEST_INSERT_CATEGORY);
+
+        Intent intent = new Intent(this, EditCategoryActivity.class);
+        intent.putExtras(bundle);
+
+        startActivityForResult(intent, REQUEST_INSERT_CATEGORY);
     }
 
     @Override
@@ -219,18 +250,32 @@ public class MainActivity extends AppCompatActivity implements Actions {
 
         bundle.putParcelable("eStone", st);
 
-        bundle.putInt("REQ_CODE", REQUEST_EDIT);
+        bundle.putInt("REQ_CODE", REQUEST_EDIT_STONE);
         bundle.putInt("position", pos);
 
         Intent intent = new Intent(this, EditStoneActivity.class);
         intent.putExtras(bundle);
 
-        startActivityForResult(intent, REQUEST_EDIT);
+        startActivityForResult(intent, REQUEST_EDIT_STONE);
     }
 
     @Override
     public void editCategory(int pos) {
-        Category cat;
+        Category cat = categoryAdapter.getCategoryList().get(pos);
+        ArrayList<Stone> stArray = sdb.getStonesFromCategory(cat.getId());
+
+        Bundle bundle = new Bundle();
+
+        bundle.putParcelable("eCategory", cat);
+        bundle.putParcelableArrayList("stArray", stArray);
+
+        bundle.putInt("REQ_CODE", REQUEST_EDIT_CATEGORY);
+        bundle.putInt("position", pos);
+
+        Intent intent = new Intent(this, EditCategoryActivity.class);
+        intent.putExtras(bundle);
+
+        startActivityForResult(intent, REQUEST_EDIT_CATEGORY);
     }
 
     @Override
@@ -247,35 +292,84 @@ public class MainActivity extends AppCompatActivity implements Actions {
     }
 
     @Override
-    public void toast(Stone stone) {
-        Toast.makeText(this, stone.getName()+" "+ stone.getColor(),Toast.LENGTH_LONG).show();
+    public void toast(String str) {
+        Toast.makeText(this, str,Toast.LENGTH_LONG).show();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_INSERT){
+        if (requestCode == REQUEST_INSERT_STONE){
             if (resultCode == Activity.RESULT_OK){
                 Bundle bundle = data.getExtras();
                 Stone newStone = bundle.getParcelable("returnStone");
 
                 sdb.insertStone(newStone);
-                stoneAdapter.insert(newStone);
+                reloadDB();
             } else{
                 Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
             }
-        } else if (requestCode == REQUEST_EDIT) {
+        } else if (requestCode == REQUEST_EDIT_STONE) {
             if (resultCode == Activity.RESULT_OK) {
                 Bundle bundle = data.getExtras();
-                Stone eStone = bundle.getParcelable("returnStone");
 
-                int pos = bundle.getInt("position");
+                int REQ = bundle.getInt("REQ_CODE");
 
-                stoneAdapter.update(eStone, pos);
-                sdb.updateStone(eStone);
-                reloadDB();
+                if (REQ == 0) {
+                    int pos = bundle.getInt("position");
+                    int id = bundle.getInt("id");
+
+                    stoneAdapter.remove(pos);
+                    sdb.deleteStone(id);
+                    reloadDB();
+                } else {
+                    Stone eStone = bundle.getParcelable("returnStone");
+
+                    int pos = bundle.getInt("position");
+
+                    stoneAdapter.update(eStone, pos);
+                    sdb.updateStone(eStone);
+                    reloadDB();
+                }
+
           } else {
+                Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == REQUEST_INSERT_CATEGORY) {
+            if (resultCode == Activity.RESULT_OK){
+                Bundle bundle = data.getExtras();
+                Category newCategory = bundle.getParcelable("returnCategory");
+
+                sdb.insertCategory(newCategory);
+                reloadDB();
+            } else{
+                Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == REQUEST_EDIT_CATEGORY) {
+            if (resultCode == Activity.RESULT_OK) {
+                Bundle bundle = data.getExtras();
+
+                int REQ = bundle.getInt("REQ_CODE");
+
+                if (REQ == 0) {
+                    int pos = bundle.getInt("position");
+                    int id = bundle.getInt("id");
+
+                    categoryAdapter.remove(pos);
+                    sdb.deleteCategory(id);
+                    reloadDB();
+                } else {
+                    Category eCategory = bundle.getParcelable("returnCategory");
+
+                    int pos = bundle.getInt("position");
+
+                    categoryAdapter.update(eCategory, pos);
+                    sdb.updateCategory(eCategory);
+                    reloadDB();
+                }
+
+            } else {
                 Toast.makeText(this,"Operação Cancelada!",Toast.LENGTH_LONG).show();
             }
         }

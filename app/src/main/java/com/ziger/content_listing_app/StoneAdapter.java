@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,8 +65,12 @@ public class StoneAdapter extends RecyclerView.Adapter {
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                actions.editStone(viewHolder.getAdapterPosition());
-                actions.toast(stoneList.get(viewHolder.getAdapterPosition()));
+                try {
+                    actions.editStone(viewHolder.getAdapterPosition());
+                    actions.toast(stoneList.get(viewHolder.getAdapterPosition()).getName());
+                } catch (NullPointerException e){
+                    Toast.makeText(activity, "Tente a edição pela guia de pedras.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

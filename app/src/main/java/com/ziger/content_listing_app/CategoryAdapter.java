@@ -61,6 +61,7 @@ public class CategoryAdapter extends RecyclerView.Adapter {
             @Override
             public void onClick(View v) {
                 actions.editCategory(viewHolder.getAdapterPosition());
+                actions.toast(categoryList.get(viewHolder.getAdapterPosition()).getName());
             }
         });
     }
