@@ -305,6 +305,8 @@ public class MainActivity extends AppCompatActivity implements Actions {
                 Bundle bundle = data.getExtras();
                 Stone newStone = bundle.getParcelable("returnStone");
 
+                newStone.setCategory(sdb.getCategoryFromName(bundle.getString("categoryName")).getId());
+
                 sdb.insertStone(newStone);
                 reloadDB();
             } else{
@@ -327,6 +329,8 @@ public class MainActivity extends AppCompatActivity implements Actions {
                     Stone eStone = bundle.getParcelable("returnStone");
 
                     int pos = bundle.getInt("position");
+
+                    eStone.setCategory(sdb.getCategoryFromName(bundle.getString("categoryName")).getId());
 
                     stoneAdapter.update(eStone, pos);
                     sdb.updateStone(eStone);

@@ -159,7 +159,6 @@ public class EditStoneActivity extends AppCompatActivity {
 
         returnStone.setName(nameEditText.getText().toString());
         returnStone.setColor(colorEditText.getText().toString());
-        returnStone.setCategory(categorySpinner.getSelectedItemPosition() + 1);
         returnStone.setUrl(urlTextView.getText().toString());
 
         returnStone.setImage(bpmBytes);
@@ -171,6 +170,7 @@ public class EditStoneActivity extends AppCompatActivity {
         }
         returnBundle.putParcelable("returnStone", returnStone);
         returnBundle.putInt("REQ_CODE", -1);
+        returnBundle.putString("categoryName", categorySpinner.getSelectedItem().toString());
 
         Intent returnIntent = new Intent();
         returnIntent.putExtras(returnBundle);
